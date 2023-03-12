@@ -8,7 +8,7 @@
 PRODUCT_NAME = csun23
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.csun23
+PRODUCT_BUNDLE_IDENTIFIER = com.dra11y.csun23
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2023 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2023 com.dra11y. All rights reserved.

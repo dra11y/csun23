@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:icon_decoration/icon_decoration.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:url_launcher/url_launcher_string.dart';
 
 import '../models/models.dart';
+import '../widgets/heading.dart';
 
 class SessionDetailsPage extends ConsumerStatefulWidget {
   const SessionDetailsPage({super.key, required this.session});
@@ -29,11 +30,24 @@ class _SessionDetailsPageState extends ConsumerState<SessionDetailsPage> {
     final colorScheme = Theme.of(context).colorScheme;
     final textScale = MediaQuery.of(context).textScaleFactor;
 
+    void toggleFavorite() {
+      favoritesNotifier.toggle(session.id);
+      Future.delayed(const Duration(milliseconds: 100), () {
+        final isFavorite = ref.read(favoritesProvider).contains(session.id);
+        SemanticsService.announce(
+            isFavorite ? 'Added favorite' : 'Removed favorite',
+            TextDirection.ltr);
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(session.name),
       ),
       body: ListView(
+        physics: const ClampingScrollPhysics(),
+        cacheExtent: 100,
+        addSemanticIndexes: true,
         children: [
           Semantics(
             sortKey: const OrdinalSortKey(1),
@@ -45,24 +59,18 @@ class _SessionDetailsPageState extends ConsumerState<SessionDetailsPage> {
                       Semantics(
                         sortKey: const OrdinalSortKey(1),
                         container: true,
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 20, bottom: 10),
-                          child: Text(
-                            DateFormat('h:mm a on EEEE, MMMM d')
-                                .format(session.dateTime),
-                            textAlign: TextAlign.center,
-                          ),
+                        child: Text(
+                          DateFormat('h:mm a on EEEE, MMMM d')
+                              .format(session.dateTime),
+                          textAlign: TextAlign.center,
                         ),
                       ),
                       Semantics(
                         sortKey: const OrdinalSortKey(1.5),
                         container: true,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          child: Text(
-                            session.location,
-                            textAlign: TextAlign.center,
-                          ),
+                        child: Text(
+                          session.location,
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     ],
@@ -74,137 +82,87 @@ class _SessionDetailsPageState extends ConsumerState<SessionDetailsPage> {
                   button: true,
                   label: isFavorite ? 'Remove Favorite' : 'Add Favorite',
                   excludeSemantics: true,
-                  onTap: () => favoritesNotifier.toggle(session.id),
-                  child: Padding(
-                    padding: const EdgeInsets.all(10).copyWith(right: 20),
-                    child: MaterialButton(
-                      onPressed: () => favoritesNotifier.toggle(session.id),
-                      child: Column(
-                        children: [
-                          DecoratedIcon(
-                            decoration: isFavorite
-                                ? IconDecoration(
-                                    border: IconBorder(width: textScale * 3))
-                                : null,
-                            icon: Icon(
-                              isFavorite ? Icons.star : Icons.clear,
-                              semanticLabel: isFavorite ? 'Favorite' : null,
-                              color: isFavorite
-                                  ? Colors.amber
-                                  : Colors.transparent,
-                            ),
-                          ),
-                          Text(
-                            isFavorite ? 'Remove\nFavorite' : 'Add\nFavorite',
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Table(
-              border: TableBorder.all(
-                color: Colors.grey,
-              ),
-              columnWidths: const {
-                0: IntrinsicColumnWidth(),
-              },
-              children: [
-                _tableRow(
-                    label: 'Audience Level',
-                    text: session.audienceLevel.toString()),
-                _tableRow(label: 'Abstract', text: session.abstractText),
-                _tableRow(label: 'Session Type', text: session.sessionType),
-                _tableRow(
-                    label: 'Presenters', text: session.presenters.join('\n')),
-                _tableRow(label: 'Primary Topic', text: session.primaryTopic),
-                _tableRow(
-                    label: 'Secondary Topics',
-                    text: session.secondaryTopics.join(', ')),
-                _tableRow(
-                    label: 'View on Web',
-                    content: GestureDetector(
-                      onTap: openLink,
-                      child: Semantics(
-                        container: true,
-                        link: true,
-                        onTap: openLink,
-                        child: Text(
-                          session.url,
-                          style: TextStyle(
-                            color: colorScheme.primary,
-                            decoration: TextDecoration.underline,
+                  onTap: toggleFavorite,
+                  child: MaterialButton(
+                    onPressed: toggleFavorite,
+                    child: Column(
+                      children: [
+                        DecoratedIcon(
+                          decoration: isFavorite
+                              ? IconDecoration(
+                                  border: IconBorder(width: textScale * 3))
+                              : null,
+                          icon: Icon(
+                            isFavorite ? Icons.star : Icons.clear,
+                            semanticLabel: isFavorite ? 'Favorite' : null,
+                            color:
+                                isFavorite ? Colors.amber : Colors.transparent,
                           ),
                         ),
-                      ),
-                    )),
+                        Text(
+                          isFavorite ? 'Remove\nFavorite' : 'Add\nFavorite',
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(top: 20),
-            child: Semantics(
-              header: true,
-              container: true,
-              child: const Text(
-                'Description',
-                textAlign: TextAlign.center,
+          const Heading(text: 'Audience Level'),
+          Text(session.audienceLevel.toString()),
+          const Heading(text: 'Abstract'),
+          Text(session.abstractText),
+          const Heading(text: 'Session Type'),
+          Text(session.sessionType),
+          const Heading(text: 'Presenters'),
+          Text(session.presenters.join('\n')),
+          const Heading(text: 'Primary Topic'),
+          Text(session.primaryTopic),
+          const Heading(text: 'Secondary Topics'),
+          Text(session.secondaryTopics.join(', ')),
+          const Heading(text: 'View on Web'),
+          Semantics(
+            link: true,
+            onTap: openLink,
+            label: 'View on web',
+            excludeSemantics: true,
+            child: GestureDetector(
+              onTap: openLink,
+              child: Text(
+                'View on web',
                 style: TextStyle(
-                  fontWeight: FontWeight.bold,
+                  color: colorScheme.primary,
+                  decoration: TextDecoration.underline,
                 ),
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(children: [
-              ...session.description.split('\n').map(
-                    (p) => Semantics(
-                      container: true,
-                      child: Text(p),
-                    ),
-                  ),
-            ]),
-          )
-        ],
+          const Heading(text: 'Description'),
+          Column(children: [
+            ...session.description
+                .split('\n')
+                .map(
+                  (p) => p.trim().isEmpty
+                      ? null
+                      : Semantics(
+                          container: true,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(p),
+                          ),
+                        ),
+                )
+                .whereType<Widget>(),
+          ]),
+        ]
+            .map((item) => Padding(
+                  padding: const EdgeInsets.all(10).copyWith(bottom: 0),
+                  child: item,
+                ))
+            .toList(),
       ),
-    );
-  }
-
-  TableRow _tableRow({required String label, String? text, Widget? content}) {
-    assert(
-        (text != null && content == null) || (content != null && text == null));
-    return TableRow(
-      children: [
-        TableCell(
-          child: Semantics(
-            container: true,
-            header: true,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                label,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-        ),
-        TableCell(
-          child: Semantics(
-            container: true,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: text != null ? Text(text) : content,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

@@ -12,18 +12,18 @@ class Section extends MultiSliver {
           key: key,
           pushPinnedChildren: true,
           children: [
-            SliverPinnedHeader(
-              child: ColoredBox(
-                color: headerColor,
-                child: ListTile(
-                  textColor: titleColor,
-                  title: Text(
-                    title,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ),
+            // SliverPinnedHeader(
+            //   child: ColoredBox(
+            //     color: headerColor,
+            //     child: ListTile(
+            //       textColor: titleColor,
+            //       title: Text(
+            //         title,
+            //         style: const TextStyle(fontWeight: FontWeight.bold),
+            //       ),
+            //     ),
+            //   ),
+            // ),
             SliverList(
               delegate: SliverChildListDelegate.fixed(items),
             ),

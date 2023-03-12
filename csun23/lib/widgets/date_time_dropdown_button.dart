@@ -52,6 +52,7 @@ class DateTimeDropdownButton extends StatelessWidget {
                     child: Text(
                       dateFormat.format(date),
                       style: TextStyle(color: buttonColor),
+                      textScaleFactor: 1.3,
                     ),
                   ),
                 ),
@@ -61,18 +62,22 @@ class DateTimeDropdownButton extends StatelessWidget {
             final isSelected = date == value;
             return DropdownMenuItem<DateTime>(
               value: date,
-              child: Row(
-                children: [
-                  Icon(
-                    isSelected ? Icons.check : null,
-                    color: selectedColor,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    dateFormat.format(date),
-                    style: TextStyle(color: selectedColor),
-                  ),
-                ],
+              child: Semantics(
+                selected: isSelected,
+                child: Row(
+                  children: [
+                    Icon(
+                      isSelected ? Icons.check : null,
+                      color: selectedColor,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      dateFormat.format(date),
+                      style: TextStyle(color: selectedColor),
+                      textScaleFactor: 1.3,
+                    ),
+                  ],
+                ),
               ),
             );
           }).toList(),

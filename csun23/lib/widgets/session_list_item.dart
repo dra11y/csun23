@@ -22,6 +22,7 @@ class SessionListItem extends StatelessWidget {
     final textScale = MediaQuery.of(context).textScaleFactor;
 
     return ListTile(
+      minLeadingWidth: 0,
       leading: DecoratedIcon(
         decoration: isFavorite
             ? IconDecoration(border: IconBorder(width: textScale * 3))
@@ -36,7 +37,13 @@ class SessionListItem extends StatelessWidget {
       subtitle: Text(
         '${session.audienceLevel} - ${session.location}',
       ),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: const SizedBox(
+        width: 24,
+        child: Icon(
+          Icons.chevron_right,
+          size: 48,
+        ),
+      ),
       onTap: onTap,
       onLongPress: onLongPress,
     );
