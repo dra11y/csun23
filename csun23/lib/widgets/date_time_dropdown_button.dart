@@ -32,8 +32,17 @@ class DateTimeDropdownButton extends StatelessWidget {
           return const SizedBox.shrink();
         }
         final sortedDates = dates.sorted((a, b) => a.compareTo(b)).toSet();
-        final validValue = (value ?? sortedDates.firstOrNull ?? DateTime.now())
-            .constrainedTo(sortedDates);
+
+        /// Add our special `dateTimeShowAll` value to the end of the list.
+        sortedDates.add(dateTimeShowAll);
+
+        /// Consider our special `dateTimeShowAll` value to be valid.
+        /// Otherwise, constrain to one of the session `DateTime` values.
+        final validValue = value == dateTimeShowAll
+            ? dateTimeShowAll
+            : (value ?? sortedDates.firstOrNull ?? DateTime.now())
+                .snappedToSameDay(sortedDates);
+
         return DropdownButton<DateTime>(
           underline: const SizedBox(),
           borderRadius: const BorderRadius.all(Radius.circular(5)),
@@ -50,7 +59,7 @@ class DateTimeDropdownButton extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                      dateFormat.format(date),
+                      date.format(dateFormat),
                       style: TextStyle(color: buttonColor),
                       textScaleFactor: 1.3,
                     ),
@@ -59,7 +68,7 @@ class DateTimeDropdownButton extends StatelessWidget {
               )
               .toList(),
           items: sortedDates.map<DropdownMenuItem<DateTime>>((DateTime date) {
-            final isSelected = date == value;
+            final isSelected = date == validValue;
             return DropdownMenuItem<DateTime>(
               value: date,
               child: Semantics(
@@ -72,7 +81,7 @@ class DateTimeDropdownButton extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      dateFormat.format(date),
+                      date.format(dateFormat),
                       style: TextStyle(color: selectedColor),
                       textScaleFactor: 1.3,
                     ),

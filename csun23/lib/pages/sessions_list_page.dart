@@ -1,4 +1,4 @@
-import 'package:collection/collection.dart';
+import 'package:csun23/extensions/date_time_extension.dart';
 import 'package:csun23/pages/session_details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -40,18 +40,34 @@ class _SessionsListPageState extends ConsumerState<SessionsListPage> {
         ref.watch(selectedDateTimeProvider.notifier);
     final favorites = ref.watch(favoritesProvider);
 
-    if (selectedDate == null) {
-      final firstDate = sessionDates.maybeWhen(
-        data: (sessionDates) =>
-            sessionDates.sorted((a, b) => a.compareTo(b)).first,
-        orElse: () => null,
-      );
-      if (firstDate != null) {
-        WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-          selectedDateNotifier.setDateTime(firstDate);
-        });
-      }
-    }
+    sessionDates.maybeWhen(
+      data: (dates) {
+        if (selectedDate == dateTimeShowAll) {
+          return;
+        }
+        if (selectedDate == null || !dates.contains(selectedDate.date)) {
+          WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+            selectedDateNotifier.setDateTime(dates.first);
+          });
+        }
+      },
+      orElse: () => null,
+    );
+
+    sessionTimes.maybeWhen(
+      data: (times) {
+        if (times.isEmpty || selectedDateTime == dateTimeShowAll) {
+          return;
+        }
+        if (selectedDateTime == null || !times.contains(selectedDateTime)) {
+          final snapped = (selectedDateTime ?? DateTime.now()).snappedTo(times);
+          WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+            selectedDateTimeNotifier.setDateTime(snapped);
+          });
+        }
+      },
+      orElse: () => null,
+    );
 
     final datesDropdown = DateTimeDropdownButton(
       dateTimes: sessionDates,
@@ -96,7 +112,7 @@ class _SessionsListPageState extends ConsumerState<SessionsListPage> {
               ),
             ),
           ],
-          title: Text(title),
+          title: Text(title, semanticsLabel: title.toLowerCase()),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(30),
             child: Row(
@@ -112,6 +128,7 @@ class _SessionsListPageState extends ConsumerState<SessionsListPage> {
             sessions: sessions,
             favorites: favorites,
             showOnlyFavorites: showOnlyFavorites,
+            selectedDate: selectedDate,
             selectedDateTime: selectedDateTime,
           ),
           error: (error, stackTrace) => Center(
@@ -140,14 +157,26 @@ class _SessionsListPageState extends ConsumerState<SessionsListPage> {
     required List<Session> sessions,
     required Set<int> favorites,
     required bool showOnlyFavorites,
+    required DateTime? selectedDate,
     required DateTime? selectedDateTime,
   }) {
     final filteredSessions = showOnlyFavorites
         ? sessions.where((session) => favorites.contains(session.id)).toList()
         : sessions;
-    // final groups = groupBy(filteredSessions, (session) => session.dateTime);
-    filteredSessions
-        .sort((a, b) => b.audienceLevel.index.compareTo(a.audienceLevel.index));
+
+    /// Order by audience level only if we're not showing all for the week.
+    if (selectedDate != dateTimeShowAll) {
+      filteredSessions.sort((a, b) {
+        final levelComparison =
+            b.audienceLevel.index.compareTo(a.audienceLevel.index);
+        if (levelComparison != 0) {
+          return levelComparison; // Sort by audienceLevel first
+        } else {
+          return a.dateTime.compareTo(
+              b.dateTime); // If audienceLevel is the same, sort by dateTime
+        }
+      });
+    }
 
     if (selectedDateTime != lastSelectedDateTime ||
         filteredSessions.length != sessionsBeingShown) {
@@ -156,7 +185,7 @@ class _SessionsListPageState extends ConsumerState<SessionsListPage> {
       lastSelectedDateTime = selectedDateTime;
       Future.delayed(const Duration(milliseconds: 100), () {
         SemanticsService.announce(
-            'Showing $count${showOnlyFavorites ? ' favorited' : ''} ${Intl.plural(count, one: 'session', other: 'sessions')}',
+            'Showing ${showOnlyFavorites ? '$count favorited' : count} ${Intl.plural(count, one: 'session', other: 'sessions')}',
             TextDirection.ltr,
             assertiveness: Assertiveness.polite);
       });
@@ -175,6 +204,8 @@ class _SessionsListPageState extends ConsumerState<SessionsListPage> {
             child: SessionListItem(
               session: session,
               isFavorite: isFavorite,
+              showDate: selectedDate == dateTimeShowAll,
+              showTime: selectedDateTime == dateTimeShowAll,
               onTap: () => Navigator.of(context)
                   .push(MaterialPageRoute(builder: (context) {
                 return SessionDetailsPage(session: session);

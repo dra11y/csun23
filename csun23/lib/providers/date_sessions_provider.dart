@@ -11,16 +11,14 @@ final dateSessionsProvider =
     FutureProvider.autoDispose<List<Session>>((ref) async {
   final allSessions = await ref.watch(allSessionsProvider.future);
   final allDates = await ref.watch(sessionDatesProvider.future);
+  final allTimes = allSessions.map((session) => session.dateTime).toSet();
   final earliestDate = allDates.min;
-  final latestDate = allDates.max;
   final selectedDateNotifier = ref.watch(selectedDateProvider.notifier);
   final selectedDate = ref.watch(selectedDateProvider)?.date;
   if (selectedDate == null) {
     selectedDateNotifier.setDateTime(earliestDate);
   }
-  final date = [
-    earliestDate,
-    [latestDate, selectedDate ?? earliestDate].min
-  ].max;
+  final date = (selectedDate ?? earliestDate).snappedTo(allTimes);
+  print('date = $date');
   return allSessions.where((session) => session.dateTime.date == date).toList();
 });

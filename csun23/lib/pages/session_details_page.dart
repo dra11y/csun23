@@ -1,3 +1,4 @@
+import 'package:accessible_text_view/accessible_text_view.dart';
 import 'package:csun23/providers/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -110,8 +111,13 @@ class _SessionDetailsPageState extends ConsumerState<SessionDetailsPage> {
               ],
             ),
           ),
+          const Heading(text: 'Title'),
+          Text(session.name),
           const Heading(text: 'Audience Level'),
-          Text(session.audienceLevel.toString()),
+          Text(
+            session.audienceLevel.toString(),
+            style: TextStyle(color: session.audienceLevel.color),
+          ),
           const Heading(text: 'Abstract'),
           Text(session.abstractText),
           const Heading(text: 'Session Type'),
@@ -122,40 +128,56 @@ class _SessionDetailsPageState extends ConsumerState<SessionDetailsPage> {
           Text(session.primaryTopic),
           const Heading(text: 'Secondary Topics'),
           Text(session.secondaryTopics.join(', ')),
+          // Semantics(
+          //   link: true,
+          //   onTap: openLink,
+          //   label: session.url,
+          //   excludeSemantics: true,
+          //   child: GestureDetector(
+          //     onTap: openLink,
+          //     child: Tooltip(
+          //       message: session.url,
+          //       child: Text(
+          //         session.url,
+          //         overflow: TextOverflow.ellipsis,
+          //         maxLines: 1,
+          //         style: TextStyle(
+          //           color: colorScheme.primary,
+          //           decoration: TextDecoration.underline,
+          //         ),
+          //       ),
+          //     ),
+          //   ),
+          // ),
+          const Heading(text: 'Description'),
+          ...session.description
+              .split('\n')
+              .map(
+                (p) => p.trim().isEmpty
+                    ? null
+                    : Semantics(
+                        container: true,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(p),
+                        ),
+                      ),
+              )
+              .whereType<Widget>(),
+          const SizedBox(height: 20),
           const Heading(text: 'View on Web'),
-          Semantics(
-            link: true,
-            onTap: openLink,
-            label: 'View on web',
-            excludeSemantics: true,
-            child: GestureDetector(
-              onTap: openLink,
-              child: Text(
-                'View on web',
-                style: TextStyle(
-                  color: colorScheme.primary,
-                  decoration: TextDecoration.underline,
-                ),
+          SizedBox(
+            height: 30,
+            child: Tooltip(
+              message: session.url,
+              child: AccessibleTextView(
+                html: '<a href="${session.url}">${session.url}</a>',
+                maxLines: 1,
               ),
             ),
           ),
-          const Heading(text: 'Description'),
-          Column(children: [
-            ...session.description
-                .split('\n')
-                .map(
-                  (p) => p.trim().isEmpty
-                      ? null
-                      : Semantics(
-                          container: true,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(p),
-                          ),
-                        ),
-                )
-                .whereType<Widget>(),
-          ]),
+
+          const SizedBox(height: 50),
         ]
             .map((item) => Padding(
                   padding: const EdgeInsets.all(10).copyWith(bottom: 0),
