@@ -13,4 +13,12 @@ class Presenter {
       organization: json['organization'],
     );
   }
+
+  @override
+  String toString() {
+    if (organization != null) {
+      return '$name ($organization)';
+    }
+    return name;
+  }
 }

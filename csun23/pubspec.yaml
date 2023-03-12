@@ -39,6 +39,9 @@ dependencies:
   intl: ^0.18.0
   collection: ^1.17.0
   flutter_riverpod: ^2.3.1
+  shared_preferences: ^2.0.18
+  url_launcher: ^6.1.10
+  icon_decoration: ^1.0.1
 
 dev_dependencies:
   flutter_test:
